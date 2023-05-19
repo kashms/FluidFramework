@@ -6,7 +6,7 @@ import {
     AzureClientProps,
     AzureMember,
     ITokenProvider,
-    ITokenResponse
+    ITokenResponse,
 } from '@fluidframework/azure-client';
 import {
     generateTestUser,
@@ -17,9 +17,9 @@ import { Signaler } from '@fluid-experimental/data-objects';
 import { SharedCounter } from '@fluidframework/counter';
 import { SharedTreeFactory } from '@fluid-experimental/tree2';
 
-import axios from "axios";
-// import { DevtoolsLogger, initializeDevtools } from "@fluid-experimental/devtools";
-// import { TelemetryNullLogger } from "@fluidframework/telemetry-utils";
+import axios from 'axios';
+import { DevtoolsLogger, initializeDevtools } from '@fluid-experimental/devtools';
+import { TelemetryNullLogger } from '@fluidframework/telemetry-utils';
 
 /**
  * Token Provider implementation for connecting to an Azure Function endpoint for
@@ -33,22 +33,34 @@ export class AzureFunctionTokenProvider implements ITokenProvider {
      */
     constructor(
         private readonly azFunctionUrl: string,
-        private readonly user?: Pick<AzureMember, "userId" | "userName" | "additionalDetails">,
-    ) { }
+        private readonly user?: Pick<
+            AzureMember,
+            'userId' | 'userName' | 'additionalDetails'
+        >
+    ) {}
 
-    public async fetchOrdererToken(tenantId: string, documentId?: string): Promise<ITokenResponse> {
+    public async fetchOrdererToken(
+        tenantId: string,
+        documentId?: string
+    ): Promise<ITokenResponse> {
         return {
             jwt: await this.getToken(tenantId, documentId),
         };
     }
 
-    public async fetchStorageToken(tenantId: string, documentId: string): Promise<ITokenResponse> {
+    public async fetchStorageToken(
+        tenantId: string,
+        documentId: string
+    ): Promise<ITokenResponse> {
         return {
             jwt: await this.getToken(tenantId, documentId),
         };
     }
 
-    private async getToken(tenantId: string, documentId: string | undefined): Promise<string> {
+    private async getToken(
+        tenantId: string,
+        documentId: string | undefined
+    ): Promise<string> {
         const response = await axios.get(this.azFunctionUrl, {
             params: {
                 tenantId,
@@ -97,18 +109,17 @@ const localConnectionConfig: AzureLocalConnectionConfig = {
     endpoint: 'http://localhost:7070',
 };
 
-const connectionConfig: AzureRemoteConnectionConfig | AzureLocalConnectionConfig = useAzure
-    ? remoteConnectionConfig
-    : localConnectionConfig;
+const connectionConfig: AzureRemoteConnectionConfig | AzureLocalConnectionConfig =
+    useAzure ? remoteConnectionConfig : localConnectionConfig;
 
-// const baseLogger = new TelemetryNullLogger();
+const baseLogger = new TelemetryNullLogger();
 
 // Wrap telemetry logger for use with Devtools
-// const devtoolsLogger = new DevtoolsLogger(baseLogger);
+const devtoolsLogger = new DevtoolsLogger(baseLogger);
 
 const clientProps: AzureClientProps = {
     connection: connectionConfig,
-    // logger: devtoolsLogger
+    logger: devtoolsLogger,
 };
 
 const client = new AzureClient(clientProps);
@@ -120,7 +131,7 @@ const containerSchema: ContainerSchema = {
     initialObjects: {
         signalManager: Signaler,
         maxZOrder: SharedCounter,
-        tree: MySharedTree
+        tree: MySharedTree,
     },
 };
 
@@ -165,6 +176,16 @@ export const loadFluidData = async (): Promise<{
         ({ container, services } = await client.getContainer(id, containerSchema));
     }
 
+    initializeDevtools({
+        logger: devtoolsLogger,
+        initialContainers: [
+            {
+                container,
+                containerId: id,
+                containerNickname: 'Shared Tree Demo Container',
+            },
+        ],
+    });
+
     return { container, services };
 };
-    
