@@ -5,7 +5,6 @@ import { ISharedTree } from '@fluid-experimental/tree2';
 import { App } from './ux';
 
 async function main() {
-
     // create the root element for React
     const root = document.createElement('div');
     root.id = 'root';
