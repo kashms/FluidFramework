@@ -18,8 +18,8 @@ import { SharedCounter } from '@fluidframework/counter';
 import { SharedTreeFactory } from '@fluid-experimental/tree2';
 
 import axios from "axios";
-// import { DevtoolsLogger, initializeDevtools } from "@fluid-experimental/devtools";
-// import { TelemetryNullLogger } from "@fluidframework/telemetry-utils";
+import { DevtoolsLogger, initializeDevtools } from '@fluid-experimental/devtools';
+import { TelemetryNullLogger } from '@fluidframework/telemetry-utils';
 
 /**
  * Token Provider implementation for connecting to an Azure Function endpoint for
@@ -101,14 +101,14 @@ const connectionConfig: AzureRemoteConnectionConfig | AzureLocalConnectionConfig
     ? remoteConnectionConfig
     : localConnectionConfig;
 
-// const baseLogger = new TelemetryNullLogger();
+const baseLogger = new TelemetryNullLogger();
 
 // Wrap telemetry logger for use with Devtools
-// const devtoolsLogger = new DevtoolsLogger(baseLogger);
+const devtoolsLogger = new DevtoolsLogger(baseLogger);
 
 const clientProps: AzureClientProps = {
     connection: connectionConfig,
-    // logger: devtoolsLogger
+    logger: devtoolsLogger
 };
 
 const client = new AzureClient(clientProps);
@@ -165,6 +165,16 @@ export const loadFluidData = async (): Promise<{
         ({ container, services } = await client.getContainer(id, containerSchema));
     }
 
+    initializeDevtools({
+        logger: devtoolsLogger,
+        initialContainers: [
+            {
+                container,
+                containerId: id,
+                containerNickname: 'Shared Tree Demo Container',
+            },
+        ],
+    });
+
     return { container, services };
 };
-    
